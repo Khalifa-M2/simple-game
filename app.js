@@ -19,8 +19,9 @@ let moveInterval;
 let moveDirection = null;
 
 // Initialize player position
-player.style.left = "180px";
+player.style.left = "18px";
 player.style.bottom = "10px";
+player.style.top = "200px";
 
 // Initialize stars
 stars.forEach(star => {
@@ -43,19 +44,41 @@ function setDifficulty(level) {
 document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft") moveDirection = "left";
   if (e.key === "ArrowRight") moveDirection = "right";
+  if(e.key === "ArrowUp") moveDirection = "up";
+  if(e.key === "ArrowDown") moveDirection = "down";
 
   if (!moveInterval) {
     moveInterval = setInterval(() => {
       let left = parseInt(player.style.left);
+       let top = parseInt(player.style.top);
       if (moveDirection === "left" && left > 0) {
         player.style.left = left - 5 + "px"; // smooth glide
       }
       if (moveDirection === "right" && left < 340) {
         player.style.left = left + 5 + "px";
       }
+      if (moveDirection === "up" && top > 0) {
+        player.style.top = top - 5 + "px";
+      }
+      if(moveDirection === "down" && top < 340){
+        player.style.top = top + 5 + "px";
+      }
+      
     }, 20);
   }
 });
+// collision detection
+function checkCollision(player,star){
+  let p = player.getBoundingClientRect();
+  let s = star.getBoundingClientRect();
+
+  return !(
+    p.top > s.bottom ||
+    p.bottom < s.top ||
+    p.left > s.right ||
+    p.right< s.left
+  )
+}
 
 document.addEventListener("keyup", () => {
   moveDirection = null;
@@ -67,6 +90,7 @@ document.addEventListener("keyup", () => {
 function dropStars() {
   stars.forEach(star => {
     let top = parseInt(star.style.top);
+    // move star top
     if (top < 360) {
       star.style.top = top + speed + "px";
     } else {
@@ -83,9 +107,19 @@ function dropStars() {
       scoreDisplay.textContent = "Score: " + score;
       speed += 0.2;
       resetStar(star);
-      if (score >= winScore) endGame("🎉 You win! You caught " + score + " stars!");
+      if (score >= winScore) endGame("🎉 You win! You caught too many stars " + score + " stars!");
     }
-  });
+       //unfied collision check
+        if(checkCollision(player,star)){
+          score++;
+          scoreDisplay.textContent = "score:" + score;
+          speed += 0.2;
+          resetStar(star);
+          if(score >= winScore){
+            endGame("🎉 you win! you caught :" + score +  "stars!")
+          }
+        }
+      });
 }
 
 function resetStar(star) {
@@ -126,6 +160,7 @@ restartBtn.addEventListener("click", () => {
   timerDisplay.textContent = "Time: " + timeLeft;
 
   player.style.left = "180px";
+  player.style.top = "200px";
   stars.forEach(star => resetStar(star));
 
   clearInterval(gameInterval);
